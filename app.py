@@ -9,9 +9,16 @@ app.secret_key = '123456'  # In production, use a proper secret key
 
 # Connect to MongoDB Atlas
 MONGO_URI = "mongodb+srv://tuyenboy1234:admin@check-in-app.jtsl3.mongodb.net/web-chat?retryWrites=true&w=majority&appName=check-in-app"
-client = MongoClient(MONGO_URI)
-db = client.userdb
-users_collection = db.users
+try:
+    client = MongoClient(MONGO_URI)
+    # Test connection
+    client.admin.command('ping')
+    db = client.userdb
+    users_collection = db.users
+    print("Successfully connected to MongoDB Atlas!")
+except Exception as e:
+    print(f"Failed to connect to MongoDB: {e}")
+    # Continuing without database will likely cause errors later
 
 # Import routes
 from app.routes import auth_routes
