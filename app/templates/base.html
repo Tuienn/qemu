@@ -3,47 +3,70 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>{% block title %}User Authentication{% endblock %}</title>
-        <!-- Tailwind CSS CDN -->
+        <title>{% block title %}Chat App{% endblock %}</title>
         <script src="https://cdn.tailwindcss.com"></script>
     </head>
-    <body class="bg-gray-100 min-h-screen">
-        <nav class="bg-blue-600 text-white p-4">
+    <body class="bg-gray-100 min-h-screen flex flex-col">
+        <header class="bg-blue-600 text-white p-4 shadow-md">
             <div class="container mx-auto flex justify-between items-center">
-                <a href="/" class="text-xl font-bold">Auth App</a>
-                <div>
-                    {% if session.get('user_id') %}
-                    <a
-                        href="/logout"
-                        class="px-4 py-2 bg-blue-500 hover:bg-blue-400 rounded"
-                        >Logout</a
-                    >
-                    {% else %}
-                    <a href="/login" class="px-4 py-2 mr-2 hover:underline"
-                        >Login</a
-                    >
-                    <a
-                        href="/register"
-                        class="px-4 py-2 bg-blue-500 hover:bg-blue-400 rounded"
-                        >Register</a
-                    >
-                    {% endif %}
-                </div>
+                <h1 class="text-xl font-bold">Chat Application</h1>
+                <nav>
+                    <ul class="flex space-x-4">
+                        {% if 'user_id' in session %}
+                        <li>
+                            <a
+                                href="{{ url_for('routes.chat') }}"
+                                class="hover:text-blue-200"
+                                >Chat</a
+                            >
+                        </li>
+                        <li>
+                            <a
+                                href="{{ url_for('routes.logout') }}"
+                                class="hover:text-blue-200"
+                                >Logout</a
+                            >
+                        </li>
+                        {% else %}
+                        <li>
+                            <a
+                                href="{{ url_for('routes.login') }}"
+                                class="hover:text-blue-200"
+                                >Login</a
+                            >
+                        </li>
+                        <li>
+                            <a
+                                href="{{ url_for('routes.register') }}"
+                                class="hover:text-blue-200"
+                                >Register</a
+                            >
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
             </div>
-        </nav>
+        </header>
 
-        <main class="container mx-auto mt-8 px-4">
-            {% with messages = get_flashed_messages() %} {% if messages %}
-            <div
-                class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"
-            >
-                <ul>
-                    {% for message in messages %}
-                    <li>{{ message }}</li>
-                    {% endfor %}
-                </ul>
+        <main class="flex-1 container mx-auto p-4">
+            {% with messages = get_flashed_messages(with_categories=true) %} {%
+            if messages %}
+            <div class="mb-4">
+                {% for category, message in messages %}
+                <div
+                    class="p-4 {% if category == 'error' %}bg-red-100 border-red-400 text-red-700{% else %}bg-green-100 border-green-400 text-green-700{% endif %} rounded border mb-2"
+                >
+                    {{ message }}
+                </div>
+                {% endfor %}
             </div>
             {% endif %} {% endwith %} {% block content %}{% endblock %}
         </main>
+
+        <footer class="bg-gray-800 text-white text-center py-4">
+            <div class="container mx-auto">
+                <p>&copy; 2025 Chat Application</p>
+            </div>
+        </footer>
     </body>
 </html>
