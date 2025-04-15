@@ -11,8 +11,8 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-# Import the app itself to access its variables
-import app as main_app
+# Import directly from database module
+from database import users_collection, messages_collection
 
 # Create a blueprint for routes
 routes = Blueprint('routes', __name__)
@@ -32,7 +32,7 @@ def login():
         password = request.form.get('password')
         
         if username and password:
-            user = main_app.users_collection.find_one({"username": username})
+            user = users_collection.find_one({"username": username})
             
             if user and bcrypt.checkpw(password.encode('utf-8'), user["password"]):
                 # Store user info in session
@@ -56,7 +56,7 @@ def register():
         name = request.form.get('name')
         
         # Check if username already exists
-        if main_app.users_collection.find_one({"username": username}):
+        if users_collection.find_one({"username": username}):
             flash('Username already exists', 'error')
             return redirect(url_for('routes.register'))
         
@@ -74,7 +74,7 @@ def register():
             user_data["name"] = name
             
         # Insert user into database
-        user_id = main_app.users_collection.insert_one(user_data).inserted_id
+        user_id = users_collection.insert_one(user_data).inserted_id
         
         # Log the user in
         session['user_id'] = str(user_id)
@@ -131,11 +131,11 @@ def create_message(user_id, username, content):
     }
     
     # Insert message into database
-    return main_app.messages_collection.insert_one(message_data)
+    return messages_collection.insert_one(message_data)
 
 def get_all_messages(limit=50):
     """Get the most recent messages from the database"""
-    cursor = main_app.messages_collection.find().sort("timestamp", -1).limit(limit)
+    cursor = messages_collection.find().sort("timestamp", -1).limit(limit)
     messages = []
     
     for msg in cursor:

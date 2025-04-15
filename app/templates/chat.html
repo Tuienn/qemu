@@ -13,7 +13,7 @@
                 <div class="flex items-center">
                     <span class="mr-4">Logged in as: {{ username }}</span>
                     <a
-                        href="{{ url_for('auth.logout') }}"
+                        href="{{ url_for('routes.logout') }}"
                         class="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded"
                         >Logout</a
                     >
@@ -52,7 +52,7 @@
             </div>
 
             <form
-                action="{{ url_for('auth.send_message') }}"
+                action="{{ url_for('routes.send_message') }}"
                 method="post"
                 class="bg-white rounded-lg shadow-md p-4"
             >
