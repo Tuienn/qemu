@@ -48,7 +48,7 @@ app.register_blueprint(routes)
 # Add debug middleware for authentication
 @app.before_request
 def debug_auth():
-    if request.endpoint == 'auth.login' and request.method == 'POST':
+    if request.endpoint == 'routes.login' and request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
         print(f"\n==== LOGIN ATTEMPT ====")

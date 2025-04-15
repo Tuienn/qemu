@@ -2,16 +2,19 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 import bcrypt
 import sys
 import os
-
-# Add the project root directory to Python path to fix imports
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-# Import MongoDB collections directly from the main app module
-from app import users_collection, messages_collection
 from datetime import datetime
 from bson import ObjectId
 
-# Create a blueprint for routes - RENAME to 'routes' to match import in app.py
+# Get the absolute path to the project root
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+# Add to Python path if not already present
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+# Import the app itself to access its variables
+import app as main_app
+
+# Create a blueprint for routes
 routes = Blueprint('routes', __name__)
 
 @routes.route('/')
@@ -29,7 +32,7 @@ def login():
         password = request.form.get('password')
         
         if username and password:
-            user = users_collection.find_one({"username": username})
+            user = main_app.users_collection.find_one({"username": username})
             
             if user and bcrypt.checkpw(password.encode('utf-8'), user["password"]):
                 # Store user info in session
@@ -53,7 +56,7 @@ def register():
         name = request.form.get('name')
         
         # Check if username already exists
-        if users_collection.find_one({"username": username}):
+        if main_app.users_collection.find_one({"username": username}):
             flash('Username already exists', 'error')
             return redirect(url_for('routes.register'))
         
@@ -71,7 +74,7 @@ def register():
             user_data["name"] = name
             
         # Insert user into database
-        user_id = users_collection.insert_one(user_data).inserted_id
+        user_id = main_app.users_collection.insert_one(user_data).inserted_id
         
         # Log the user in
         session['user_id'] = str(user_id)
@@ -128,11 +131,11 @@ def create_message(user_id, username, content):
     }
     
     # Insert message into database
-    return messages_collection.insert_one(message_data)
+    return main_app.messages_collection.insert_one(message_data)
 
 def get_all_messages(limit=50):
     """Get the most recent messages from the database"""
-    cursor = messages_collection.find().sort("timestamp", -1).limit(limit)
+    cursor = main_app.messages_collection.find().sort("timestamp", -1).limit(limit)
     messages = []
     
     for msg in cursor:
