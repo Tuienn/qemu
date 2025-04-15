@@ -1,21 +1,28 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 import bcrypt
-from app.app import users_collection, messages_collection
+import sys
+import os
+
+# Add the project root directory to Python path to fix imports
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+# Import MongoDB collections directly from the main app module
+from app import users_collection, messages_collection
 from datetime import datetime
 from bson import ObjectId
 
-# Create a blueprint for authentication routes
-auth_routes = Blueprint('auth', __name__)
+# Create a blueprint for routes - RENAME to 'routes' to match import in app.py
+routes = Blueprint('routes', __name__)
 
-@auth_routes.route('/')
+@routes.route('/')
 def index():
     if 'user_id' in session:
         # Redirect to chat page if user is logged in
-        return redirect(url_for('auth.chat'))
+        return redirect(url_for('routes.chat'))
     # If not logged in, redirect to login page
-    return redirect(url_for('auth.login'))
+    return redirect(url_for('routes.login'))
 
-@auth_routes.route('/login', methods=['GET', 'POST'])
+@routes.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form.get('username')
@@ -30,7 +37,7 @@ def login():
                 session['username'] = user['username']
                 
                 # Redirect to chat page after successful login
-                return redirect(url_for('auth.chat'))
+                return redirect(url_for('routes.chat'))
             else:
                 flash('Invalid username or password', 'error')
         else:
@@ -38,7 +45,7 @@ def login():
     
     return render_template('login.html')
 
-@auth_routes.route('/register', methods=['GET', 'POST'])
+@routes.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         username = request.form.get('username')
@@ -48,7 +55,7 @@ def register():
         # Check if username already exists
         if users_collection.find_one({"username": username}):
             flash('Username already exists', 'error')
-            return redirect(url_for('auth.register'))
+            return redirect(url_for('routes.register'))
         
         # Hash the password
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
@@ -71,21 +78,21 @@ def register():
         session['username'] = username
         
         # Redirect to chat page after registration
-        return redirect(url_for('auth.chat'))
+        return redirect(url_for('routes.chat'))
     
     return render_template('register.html')
 
-@auth_routes.route('/logout')
+@routes.route('/logout')
 def logout():
     session.clear()
-    return redirect(url_for('auth.login'))
+    return redirect(url_for('routes.login'))
 
 # Chat routes
-@auth_routes.route('/chat')
+@routes.route('/chat')
 def chat():
     if 'user_id' not in session:
         flash('Please login to access the chat', 'error')
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('routes.login'))
     
     # Get recent messages
     messages = get_all_messages(50)
@@ -95,10 +102,10 @@ def chat():
                           username=session['username'],
                           messages=messages)
 
-@auth_routes.route('/send_message', methods=['POST'])
+@routes.route('/send_message', methods=['POST'])
 def send_message():
     if 'user_id' not in session:
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('routes.login'))
     
     content = request.form.get('message')
     if content and content.strip():
@@ -108,7 +115,7 @@ def send_message():
             content
         )
     
-    return redirect(url_for('auth.chat'))
+    return redirect(url_for('routes.chat'))
 
 # Chat message functions
 def create_message(user_id, username, content):

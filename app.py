@@ -40,10 +40,9 @@ except Exception as e:
     print(f"Failed to connect to MongoDB: {e}")
     # Continuing without database will likely cause errors later
 
-# Import routes - updated to use routes.py instead of auth_routes.py
-from app.routes import routes
-
 # Register blueprints
+# Import routes after defining collections to avoid circular imports
+from app.routes import routes
 app.register_blueprint(routes)
 
 # Add debug middleware for authentication
