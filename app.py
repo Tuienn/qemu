@@ -14,7 +14,10 @@ load_dotenv()
 from database import users_collection, messages_collection
 
 app = Flask(__name__, template_folder='app/templates', static_folder='app/static')
-app.secret_key = os.getenv('SECRET_KEY', '123456')  # Use environment variable if available
+# Get secret key from environment variables
+app.secret_key = os.getenv('SECRET_KEY')
+if not app.secret_key:
+    raise ValueError("SECRET_KEY environment variable not set. Please check your .env file.")
 
 # Initialize SocketIO
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -92,4 +95,5 @@ def handle_message(data):
     emit('new_message', message, room='general_room')
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=8000, debug=True)
+    debug_mode = os.getenv('DEBUG', 'False').lower() in ('true', '1', 't')
+    socketio.run(app, host='0.0.0.0', port=8000, debug=debug_mode)

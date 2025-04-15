@@ -1,12 +1,16 @@
 import bcrypt
 from bson import ObjectId
-from pymongo import MongoClient
+import os
+import sys
 
-# Connect to MongoDB Atlas (same as in app.py)
-MONGO_URI = "mongodb+srv://tuyenboy1234:admin@check-in-app.jtsl3.mongodb.net/web-chat?retryWrites=true&w=majority&appName=check-in-app"
-client = MongoClient(MONGO_URI)
-db = client.userdb
-users_collection = db.users
+# Get the absolute path to the project root
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+# Add to Python path if not already present
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+# Import the database connection from the central module
+from database import users_collection
 
 class User:
     def __init__(self, username, password, name, user_id=None):
@@ -62,4 +66,4 @@ class User:
                 user_data["name"], 
                 str(user_data["_id"])
             )
-        return None 
+        return None

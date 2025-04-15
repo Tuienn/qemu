@@ -6,8 +6,10 @@ import bcrypt
 # Load environment variables
 load_dotenv()
 
-# Connect to MongoDB Atlas
-MONGO_URI = os.getenv('MONGO_URI', "mongodb+srv://tuyenboy1234:admin@check-in-app.jtsl3.mongodb.net/web-chat?retryWrites=true&w=majority&appName=check-in-app")
+# Connect to MongoDB Atlas using environment variable
+MONGO_URI = os.getenv('MONGO_URI')
+if not MONGO_URI:
+    raise ValueError("MONGO_URI environment variable not set. Please check your .env file.")
 
 try:
     client = MongoClient(MONGO_URI)
