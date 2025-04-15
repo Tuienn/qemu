@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Chat Room</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-gray-100 h-screen flex flex-col">
+        <header class="bg-blue-600 text-white p-4 shadow-md">
+            <div class="container mx-auto flex justify-between items-center">
+                <h1 class="text-xl font-bold">Chat Room</h1>
+                <div class="flex items-center">
+                    <span class="mr-4">Logged in as: {{ username }}</span>
+                    <a
+                        href="{{ url_for('auth.logout') }}"
+                        class="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded"
+                        >Logout</a
+                    >
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 container mx-auto p-4 flex flex-col">
+            <div
+                id="messages-container"
+                class="flex-1 bg-white rounded-lg shadow-md p-4 mb-4 overflow-y-auto h-[calc(100vh-200px)]"
+            >
+                {% if messages %} {% for message in messages %}
+                <div
+                    class="mb-3 {% if message.user_id == user_id %}text-right{% endif %}"
+                >
+                    <div
+                        class="inline-block rounded-lg px-4 py-2 {% if message.user_id == user_id %}bg-blue-500 text-white{% else %}bg-gray-200{% endif %}"
+                    >
+                        {% if message.user_id != user_id %}
+                        <div class="font-bold text-sm text-gray-600">
+                            {{ message.username }}
+                        </div>
+                        {% endif %}
+                        <p>{{ message.content }}</p>
+                        <div class="text-xs text-gray-500 mt-1">
+                            {{ message.timestamp.strftime('%H:%M:%S') }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %} {% else %}
+                <p class="text-gray-500 text-center">
+                    No messages yet. Be the first to send a message!
+                </p>
+                {% endif %}
+            </div>
+
+            <form
+                action="{{ url_for('auth.send_message') }}"
+                method="post"
+                class="bg-white rounded-lg shadow-md p-4"
+            >
+                <div class="flex">
+                    <input
+                        type="text"
+                        name="message"
+                        placeholder="Type your message..."
+                        class="flex-1 border rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        required
+                    />
+                    <button
+                        type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white rounded-r-lg px-4 py-2"
+                    >
+                        Send
+                    </button>
+                </div>
+            </form>
+        </main>
+
+        <script>
+            // Scroll to bottom of messages on page load
+            document.addEventListener("DOMContentLoaded", function () {
+                const messagesContainer =
+                    document.getElementById("messages-container");
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            });
+        </script>
+    </body>
+</html>

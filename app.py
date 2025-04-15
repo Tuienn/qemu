@@ -5,12 +5,16 @@ import os
 from bson import ObjectId
 import json
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__, template_folder='app/templates', static_folder='app/static')
-app.secret_key = '123456'  # In production, use a proper secret key
+app.secret_key = os.getenv('SECRET_KEY', '123456')  # Use environment variable if available
 
 # Connect to MongoDB Atlas
-MONGO_URI = "mongodb+srv://tuyenboy1234:admin@check-in-app.jtsl3.mongodb.net/web-chat?retryWrites=true&w=majority&appName=check-in-app"
+MONGO_URI = os.getenv('MONGO_URI', "mongodb+srv://tuyenboy1234:admin@check-in-app.jtsl3.mongodb.net/web-chat?retryWrites=true&w=majority&appName=check-in-app")
 try:
     client = MongoClient(MONGO_URI)
     # Test connection
@@ -36,11 +40,11 @@ except Exception as e:
     print(f"Failed to connect to MongoDB: {e}")
     # Continuing without database will likely cause errors later
 
-# Import routes
-from app.routes import auth_routes
+# Import routes - updated to use routes.py instead of auth_routes.py
+from app.routes import routes
 
 # Register blueprints
-app.register_blueprint(auth_routes)
+app.register_blueprint(routes)
 
 # Add debug middleware for authentication
 @app.before_request
@@ -70,54 +74,5 @@ def debug_auth():
             print(f"Password matches: {password_matches}")
         print("=======================\n")
 
-class ChatMessage:
-    def __init__(self, user_id, username, content, timestamp=None, message_id=None):
-        self.id = message_id
-        self.user_id = user_id
-        self.username = username
-        self.content = content
-        self.timestamp = timestamp or datetime.now()
-        
-    @staticmethod
-    def create_message(user_id, username, content):
-        # Create message document
-        message_data = {
-            "user_id": user_id,
-            "username": username,
-            "content": content,
-            "timestamp": datetime.now()
-        }
-        
-        # Insert message into database
-        result = messages_collection.insert_one(message_data)
-        
-        if result.inserted_id:
-            return ChatMessage(
-                user_id, 
-                username, 
-                content, 
-                message_data["timestamp"],
-                str(result.inserted_id)
-            )
-        return None
-    
-    @staticmethod
-    def get_all_messages(limit=50):
-        # Get the most recent messages
-        cursor = messages_collection.find().sort("timestamp", -1).limit(limit)
-        messages = []
-        
-        for msg in cursor:
-            messages.append(ChatMessage(
-                msg["user_id"],
-                msg["username"],
-                msg["content"],
-                msg["timestamp"],
-                str(msg["_id"])
-            ))
-        
-        # Return in chronological order (oldest first)
-        return list(reversed(messages))
-
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000, debug=True) 
+    app.run(host='0.0.0.0', port=8000, debug=True)
