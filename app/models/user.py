@@ -3,7 +3,7 @@ from bson import ObjectId
 from pymongo import MongoClient
 
 # Connect to MongoDB Atlas (same as in app.py)
-MONGO_URI = "mongodb+srv://username:password@cluster.mongodb.net/userdb?retryWrites=true&w=majority"
+MONGO_URI = "mongodb+srv://tuyenboy1234:admin>@check-in-app.jtsl3.mongodb.net/web-chat?retryWrites=true&w=majority&appName=check-in-app"
 client = MongoClient(MONGO_URI)
 db = client.userdb
 users_collection = db.users

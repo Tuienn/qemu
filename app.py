@@ -5,10 +5,10 @@ import os
 from bson import ObjectId
 
 app = Flask(__name__, template_folder='app/templates', static_folder='app/static')
-app.secret_key = 'your_secret_key'  # In production, use a proper secret key
+app.secret_key = '123456'  # In production, use a proper secret key
 
 # Connect to MongoDB Atlas
-MONGO_URI = "mongodb+srv://username:password@cluster.mongodb.net/userdb?retryWrites=true&w=majority"
+MONGO_URI = "mongodb+srv://tuyenboy1234:admin@check-in-app.jtsl3.mongodb.net/web-chat?retryWrites=true&w=majority&appName=check-in-app"
 client = MongoClient(MONGO_URI)
 db = client.userdb
 users_collection = db.users
