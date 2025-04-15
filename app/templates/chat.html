@@ -5,6 +5,20 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Chat Room</title>
         <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
+        <style>
+            .message-container {
+                scroll-behavior: smooth;
+            }
+            .message {
+                max-width: 70%;
+                word-wrap: break-word;
+            }
+            .message-time {
+                font-size: 0.7rem;
+                opacity: 0.7;
+            }
+        </style>
     </head>
     <body class="bg-gray-100 h-screen flex flex-col">
         <header class="bg-blue-600 text-white p-4 shadow-md">
@@ -24,14 +38,14 @@
         <main class="flex-1 container mx-auto p-4 flex flex-col">
             <div
                 id="messages-container"
-                class="flex-1 bg-white rounded-lg shadow-md p-4 mb-4 overflow-y-auto h-[calc(100vh-200px)]"
+                class="flex-1 bg-white rounded-lg shadow-md p-4 mb-4 overflow-y-auto h-[calc(100vh-200px)] message-container"
             >
                 {% if messages %} {% for message in messages %}
                 <div
-                    class="mb-3 {% if message.user_id == user_id %}text-right{% endif %}"
+                    class="mb-3 {% if message.user_id == user_id %}flex justify-end{% endif %}"
                 >
                     <div
-                        class="inline-block rounded-lg px-4 py-2 {% if message.user_id == user_id %}bg-blue-500 text-white{% else %}bg-gray-200{% endif %}"
+                        class="message rounded-lg px-4 py-2 {% if message.user_id == user_id %}bg-blue-500 text-white{% else %}bg-gray-200{% endif %}"
                     >
                         {% if message.user_id != user_id %}
                         <div class="font-bold text-sm text-gray-600">
@@ -39,7 +53,9 @@
                         </div>
                         {% endif %}
                         <p>{{ message.content }}</p>
-                        <div class="text-xs text-gray-500 mt-1">
+                        <div
+                            class="message-time text-right {% if message.user_id == user_id %}text-blue-100{% else %}text-gray-500{% endif %} mt-1"
+                        >
                             {{ message.timestamp.strftime('%H:%M:%S') }}
                         </div>
                     </div>
@@ -51,35 +67,114 @@
                 {% endif %}
             </div>
 
-            <form
-                action="{{ url_for('routes.send_message') }}"
-                method="post"
-                class="bg-white rounded-lg shadow-md p-4"
-            >
+            <div class="bg-white rounded-lg shadow-md p-4">
                 <div class="flex">
                     <input
                         type="text"
-                        name="message"
+                        id="message-input"
                         placeholder="Type your message..."
                         class="flex-1 border rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
                         required
                     />
                     <button
-                        type="submit"
+                        id="send-button"
                         class="bg-blue-600 hover:bg-blue-700 text-white rounded-r-lg px-4 py-2"
                     >
                         Send
                     </button>
                 </div>
-            </form>
+            </div>
         </main>
 
         <script>
-            // Scroll to bottom of messages on page load
-            document.addEventListener("DOMContentLoaded", function () {
-                const messagesContainer =
-                    document.getElementById("messages-container");
+            // Connect to Socket.IO server
+            const socket = io();
+            const messageInput = document.getElementById("message-input");
+            const sendButton = document.getElementById("send-button");
+            const messagesContainer =
+                document.getElementById("messages-container");
+            const currentUserId = "{{ user_id }}";
+            const currentUsername = "{{ username }}";
+
+            // Function to scroll to bottom of messages
+            function scrollToBottom() {
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+
+            // Initial scroll to bottom
+            scrollToBottom();
+
+            // Send message when button is clicked
+            sendButton.addEventListener("click", function () {
+                sendMessage();
+            });
+
+            // Send message when Enter key is pressed
+            messageInput.addEventListener("keypress", function (e) {
+                if (e.key === "Enter") {
+                    sendMessage();
+                }
+            });
+
+            // Function to send a message
+            function sendMessage() {
+                const message = messageInput.value.trim();
+                if (message) {
+                    // Send message to server
+                    socket.emit("send_message", { message: message });
+                    // Clear input
+                    messageInput.value = "";
+                    // Focus input for next message
+                    messageInput.focus();
+                }
+            }
+
+            // Listen for new messages
+            socket.on("new_message", function (msg) {
+                // Create message element
+                const messageDiv = document.createElement("div");
+                messageDiv.className = `mb-3 ${
+                    msg.user_id === currentUserId ? "flex justify-end" : ""
+                }`;
+
+                const messageContent = document.createElement("div");
+                messageContent.className = `message rounded-lg px-4 py-2 ${
+                    msg.user_id === currentUserId
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-200"
+                }`;
+
+                // Add username for other people's messages (not emails)
+                if (msg.user_id !== currentUserId) {
+                    const usernameDiv = document.createElement("div");
+                    usernameDiv.className = "font-bold text-sm text-gray-600";
+                    usernameDiv.textContent = msg.username; // Always use username
+                    messageContent.appendChild(usernameDiv);
+                }
+
+                // Add message content
+                const contentP = document.createElement("p");
+                contentP.textContent = msg.content;
+                messageContent.appendChild(contentP);
+
+                // Add timestamp
+                const timeDiv = document.createElement("div");
+                timeDiv.className = `message-time text-right ${
+                    msg.user_id === currentUserId
+                        ? "text-blue-100"
+                        : "text-gray-500"
+                } mt-1`;
+                timeDiv.textContent = msg.timestamp;
+                messageContent.appendChild(timeDiv);
+
+                // Add message content to the message div
+                messageDiv.appendChild(messageContent);
+
+                // Add message to container
+                messagesContainer.appendChild(messageDiv);
+
+                // Scroll to the new message
+                scrollToBottom();
             });
         </script>
     </body>

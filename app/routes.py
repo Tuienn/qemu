@@ -97,7 +97,7 @@ def chat():
         flash('Please login to access the chat', 'error')
         return redirect(url_for('routes.login'))
     
-    # Get recent messages
+    # Get recent messages - properly formatted for the UI
     messages = get_all_messages(50)
     
     return render_template('chat.html', 
@@ -105,6 +105,8 @@ def chat():
                           username=session['username'],
                           messages=messages)
 
+# We're now using Socket.IO for real-time messages, so this route is no longer needed
+# But we'll keep it for backward compatibility
 @routes.route('/send_message', methods=['POST'])
 def send_message():
     if 'user_id' not in session:
